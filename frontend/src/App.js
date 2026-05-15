@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "./App.css";
 
 function App() {
   const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState('');
-
-  const API = 'http://localhost:5000';
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [category, setCategory] = useState("Work");
+  const [search, setSearch] = useState("");
 
   const fetchTasks = async () => {
-    const res = await axios.get(`${API}/tasks`);
-    setTasks(res.data);
+    try {
+      const res = await axios.get("http://localhost:5000/tasks");
+      setTasks(res.data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -19,42 +25,91 @@ function App() {
   const addTask = async () => {
     if (!title) return;
 
-    await axios.post(`${API}/tasks`, {
-      title
-    });
+    try {
+      await axios.post("http://localhost:5000/tasks", {
+        title,
+        priority,
+        category,
+      });
 
-    setTitle('');
-    fetchTasks();
+      setTitle("");
+      fetchTasks();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const deleteTask = async (id) => {
-    await axios.delete(`${API}/tasks/${id}`);
-    fetchTasks();
+    try {
+      await axios.delete(`http://localhost:5000/tasks/${id}`);
+      fetchTasks();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div style={{ padding: '40px' }}>
-      <h1>Task Manager</h1>
+    <div className="app">
+      <div className="container">
+        <h1>🚀 Professional Task Manager</h1>
 
-      <input
-        type="text"
-        placeholder="Enter task"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+        <div className="top-bar">
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-      <button onClick={addTask}>Add</button>
+        <div className="task-form">
+          <input
+            type="text"
+            placeholder="Enter task..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
 
-      <ul>
-        {tasks.map(task => (
-          <li key={task._id}>
-            {task.title}
-            <button onClick={() => deleteTask(task._id)}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+          >
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option>Work</option>
+            <option>Study</option>
+            <option>Personal</option>
+          </select>
+
+          <button onClick={addTask}>Add Task</button>
+        </div>
+
+        <div className="task-list">
+          {filteredTasks.map((task) => (
+            <div className="task-card" key={task._id}>
+              <div>
+                <h3>{task.title}</h3>
+                <p>Priority: {task.priority}</p>
+                <p>Category: {task.category}</p>
+              </div>
+              <button onClick={() => deleteTask(task._id)}>
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
